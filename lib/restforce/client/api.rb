@@ -278,6 +278,20 @@ module Restforce
 
     private
 
+      def method_missing(method_name, *args, &block)
+        if self.class == Restforce::Client
+          proxy(method_name)
+        elsif self.class == Restforce::Client::Query
+          proxy.send(method_name, *args, &block)
+        else
+          super
+        end
+      end
+
+      def proxy(entity=nil)
+        self.kind_of?(Restforce::Client::Query) ? self : Query.new(self,entity)
+      end
+
       # Internal: Returns a path to an api endpoint
       #
       # Examples
@@ -293,6 +307,148 @@ module Restforce
         [Faraday::Error::ClientError]
       end
 
+
+      class Query
+        include Enumerable
+
+        def initialize klass, entity
+          @klass = klass
+          @entity = entity
+          @criteria = {}
+          @criteria[:selects], @criteria[:conditions], @criteria[:orders],@criteria[:limit] = [], {}, [], ''
+
+          @fetch_data = false
+          @single_element = true
+        end
+
+        def select *fields
+          options = {}
+          if fields.last.kind_of? Hash
+            options = fields.pop
+            options.reverse_merge!(:fetch_data => false) 
+          end
+
+          @criteria[:selects].concat fields
+
+          @fetch_data = true if options[:fetch_data]
+          self
+        end
+
+        def all
+          @fetch_data = true
+          self
+        end
+
+        def where *where_clauses
+          where_clauses.each do |where_clause|
+            case where_clause.class.name
+            when 'String'
+              @criteria[:conditions][:string] = '' if @criteria[:conditions][:string].nil?
+              if @criteria[:conditions][:string].present?
+                @criteria[:conditions][:string] << " AND #{where_clause}"
+              else
+                @criteria[:conditions][:string] << where_clause 
+              end
+            when 'Hash'
+              @criteria[:conditions].merge!(where_clause)
+            end
+          end
+
+          @fetch_data = true
+          self
+        end
+
+        def order *order_clause
+          @criteria[:orders].concat order_clause
+          @fetch_data = true
+          self 
+        end
+
+        def limit limit
+          @criteria[:limit] = limit.to_s if limit.kind_of?(String) || limit.kind_of?(Integer)
+          @fetch_data = true
+          self
+        end
+
+        def inspect
+          execute_query
+        end
+
+        def each(&block)
+          execute_query('each', &block)
+        end
+
+        def to_a
+          execute_query
+        end
+
+        def to_s
+          execute_query
+        end
+
+        private
+
+        def fetch_array array
+          array.join(',')
+        end
+
+        def fetch_hash hash
+          hash.map{|k,v| k == :string ? v : "#{k} = '#{v}'"}.join(' AND ')
+        end
+
+        def fetch_select
+          if @criteria[:selects].present?
+            fetch_array @criteria[:selects]  
+          else
+            'Id,Name'
+          end
+        end
+
+        def fetch_where
+          fetch_hash @criteria[:conditions] unless @criteria[:conditions].empty?
+        end
+
+        def fetch_order
+          fetch_array @criteria[:orders] unless @criteria[:orders].empty?
+        end
+
+        def fetch_limit
+          @criteria[:limit] unless @criteria[:limit].empty?
+        end
+
+        def build_query
+          result = []
+          result << "SELECT #{fetch_select}"
+          result << "FROM #{@entity}"
+          result << "WHERE #{fetch_where}" if fetch_where.present?
+          result << "ORDER BY #{fetch_order}" if fetch_order.present?
+          result << "LIMIT #{@criteria[:limit]}" if fetch_limit.present?
+          result.join(' ')
+        end
+
+        def method_missing(method_name, *args, &block)
+          if self.to_a.respond_to? method_name
+            self.to_a.send(method_name, *args, &block)
+          else
+            super
+          end
+        end
+
+        def execute_query type=nil, &block
+          case type
+          when 'each'
+            @klass.query(build_query).each do |record|
+              if block_given?
+                block.call record
+              else
+                yield record
+              end
+            end
+          else
+            @fetch_data ? @klass.query(build_query) : self
+          end
+        end
+      end
     end
   end
 end
