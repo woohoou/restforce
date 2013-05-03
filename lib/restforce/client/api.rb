@@ -343,16 +343,16 @@ module Restforce
           where_clauses.each do |where_clause|
             case where_clause.class.name
             when 'String'
-              if where_clause.present?
+              unless where_clause.empty?
                 @criteria[:conditions][:string] = '' if @criteria[:conditions][:string].nil?
-                if @criteria[:conditions][:string].present?
+                unless @criteria[:conditions][:string].empty?
                   @criteria[:conditions][:string] << " AND #{where_clause}"
                 else
                   @criteria[:conditions][:string] << where_clause 
                 end
               end
             when 'Hash'
-              @criteria[:conditions].merge!(where_clause) if where_clause.present?
+              @criteria[:conditions].merge!(where_clause) unless where_clause.empty?
             end
           end
 
@@ -399,7 +399,7 @@ module Restforce
         end
 
         def fetch_select
-          if @criteria[:selects].present?
+          unless @criteria[:selects].empty?
             fetch_array @criteria[:selects]  
           else
             'Id,Name'
@@ -419,12 +419,14 @@ module Restforce
         end
 
         def build_query
+          where, order, limit = fetch_where, fetch_order, fetch_limit 
+
           result = []
           result << "SELECT #{fetch_select}"
           result << "FROM #{@entity}"
-          result << "WHERE #{fetch_where}" if fetch_where.present?
-          result << "ORDER BY #{fetch_order}" if fetch_order.present?
-          result << "LIMIT #{@criteria[:limit]}" if fetch_limit.present?
+          result << "WHERE #{fetch_where}" unless where.nil? || where.empty?
+          result << "ORDER BY #{fetch_order}" unless order.nil? || order.empty?
+          result << "LIMIT #{@criteria[:limit]}" unless limit.nil? || limit.empty?
           result.join(' ')
         end
 

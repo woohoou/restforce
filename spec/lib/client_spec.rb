@@ -110,6 +110,75 @@ shared_examples_for 'methods' do
     it { should be_an Enumerable }
   end
 
+  describe ".select" do
+    requests 'query\?q=SELECT%20some,fields%20FROM%20object', :fixture => 'sobject/query_success_response'
+
+    it "constructs and submits a SOQL query with method select(string)" do
+      client.object.select('some,fields').all.to_a.should be_an Enumerable
+    end
+
+    it "constructs and submits a SOQL query with method select(array)" do
+      client.object.select(['some','fields']).all.to_a.should be_an Enumerable
+    end
+
+    it "constructs and submits a SOQL query with method select(args)" do
+      client.object.select('some','fields').all.to_a.should be_an Enumerable
+    end
+  end
+
+  describe ".where" do
+    pending
+    #requests "query?q=SELECT%20some%2Cfields%20FROM%20object%20WHERE%20Name%20%3D%20foo%20AND%20Description%20%3D%20bar", :fixture => 'sobject/query_success_response'
+
+    it "constructs and submits a SOQL query with method where(hash)" do
+      pending
+      #client.object.select('some','fields').where(Name: 'foo', Description: 'bar').to_a.should be_an Enumerable
+    end
+
+    it "constructs and submits a SOQL query with method where(args)" do
+      pending
+      #client.object.select('some','fields').where("Name = foo").to_a.should be_an Enumerable
+    end
+
+    it "constructs and submits a SOQL query with multiple method where(args)" do
+      pending
+      #client.object.select('some','fields').where("Name = foo", "Description = bar").to_a.should be_an Enumerable
+    end
+
+    it "constructs and submits a SOQL query with multiple method where(args) with empty args" do
+      pending
+      #client.object.select('some','fields').where("", "").to_a.should be_an Enumerable
+    end
+  end
+
+  describe ".order" do
+    it "constructs and submits a SOQL query with method order(array)" do
+      pending
+      @client.should_receive(:query).with("SELECT #{@field_names.join(',')} FROM TestClass ORDER BY Id DESC,Name ASC").and_return("bar")
+      TestClass.order(['Id DESC','Name ASC']).to_s.should == "bar"
+    end
+
+    it "constructs and submits a SOQL query with method order(args)" do
+      pending
+      @client.should_receive(:query).with("SELECT #{@field_names.join(',')} FROM TestClass ORDER BY Id DESC,Name ASC").and_return("bar")
+      TestClass.order('Id DESC','Name ASC').to_s.should == "bar"
+    end
+  end
+
+  describe ".limit" do
+    it "constructs and submits a SOQL query with method limit(integer)" do
+      pending
+      @client.should_receive(:query).with("SELECT #{@field_names.join(',')} FROM TestClass LIMIT 1").and_return("bar")
+      TestClass.limit(1).to_s.should == "bar"
+    end
+
+    it "constructs and submits a SOQL query with method limit(string)" do
+      pending
+      @client.should_receive(:query).with("SELECT #{@field_names.join(',')} FROM TestClass LIMIT 1").and_return("bar")
+      TestClass.limit('1').to_s.should == "bar"
+    end
+  end
+
   describe '.search' do
     requests 'search\?q=FIND%20%7Bbar%7D', :fixture => 'sobject/search_success_response'
 
