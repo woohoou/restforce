@@ -268,7 +268,8 @@ info.user_id
 ### ActiveRecord Style
 
 ```ruby
-class Author < Restforce::Rails::ActiveModel
+class Author
+  include Restforce::Rails::ActiveModel
   restforce Restforce::Client.new(options), 'Author__c'
 end
 
@@ -296,7 +297,8 @@ In 2 different ways:
 
 Class
 ```ruby
-class Author < Restforce::Rails::ActiveModel
+class Author
+  include Restforce::Rails::ActiveModel
   restforce Restforce::Client.new(options), 'Author__c'
   has_many 'Songs__r', :fields => ['Name','Date']
 end
