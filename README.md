@@ -265,6 +265,33 @@ info.user_id
 
 * * *
 
+### ActiveRecord Integration
+
+```ruby
+class Author < Restforce::Rails::ActiveModel
+
+  restforce Restforce.new(options), 'Author__c'
+
+end
+
+Author.select('Id','Name').where(Name: 'Foo').order('Name ASC').limit('1')
+
+# => #<Restforce::Collection:0x0000000754f7c0>
+
+author = Author.select('Name')
+author = author.select('Id','Description')
+author = author.where(Name: 'Foo')
+
+# => #<Restforce::Collection:0x0000000754f7c0>
+
+Author.select('Id','Name').all.first
+
+# => #<Restforce::SObject Id="xxx" Name="xxx" attributes=#<Restforce::Mash type="Author__c" url="/services/data/v26.0/sobjects/Author__c/xxx">>
+```
+
+
+* * *
+
 ### File Uploads
 
 Using the new [Blob Data](http://www.salesforce.com/us/developer/docs/api_rest/Content/dome_sobject_insert_update_blob.htm) api feature (500mb limit):
