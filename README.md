@@ -269,7 +269,7 @@ info.user_id
 
 ```ruby
 class Author < Restforce::Rails::ActiveModel
-  restforce Restforce.new(options), 'Author__c'
+  restforce Restforce::Client.new(options), 'Author__c'
 end
 
 Author.select('Id','Name').where(Name: 'Foo').order('Name ASC').limit('1')
