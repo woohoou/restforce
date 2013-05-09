@@ -286,7 +286,16 @@ Author.select('Id','Name').all.first
 
 # => #<Restforce::SObject Id="xxx" Name="xxx" attributes=#<Restforce::Mash type="Author__c" url="/services/data/v26.0/sobjects/Author__c/xxx">>
 ```
-
+Note: Method missing is used for the model, if you need define it please overwrite as below
+```ruby
+def self.method_missing method_name, *args, &block
+  if @@restforce_client.send(@@restforce_table_name).respond_to?(method_name)
+    @@restforce_client.send(@@restforce_table_name).send(method_name, *args, &block)
+  else
+    super
+  end
+end
+```
 
 * * *
 
