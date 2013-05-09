@@ -14,6 +14,7 @@ module Restforce
   autoload :SObject,       'restforce/sobject'
   autoload :Client,        'restforce/client'
   autoload :Mash,          'restforce/mash'
+  autoload :Rails,         'restforce/rails'
 
   AuthenticationError = Class.new(StandardError)
   UnauthorizedError   = Class.new(StandardError)
