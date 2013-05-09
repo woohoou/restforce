@@ -272,7 +272,7 @@ class Author < Restforce::Rails::ActiveModel
   restforce Restforce::Client.new(options), 'Author__c'
 end
 
-Author.select('Id','Name').where(Name: 'Foo').order('Name ASC').limit('1')
+Author.select('Id','Name').where(:Name => 'Foo').order('Name ASC').limit('1')
 
 # => #<Restforce::Collection:0x0000000754f7c0>
 
