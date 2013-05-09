@@ -315,10 +315,20 @@ module Restforce
           @klass = klass
           @entity = entity
           @criteria = {}
-          @criteria[:selects], @criteria[:conditions], @criteria[:orders],@criteria[:limit] = [], {}, [], ''
+          @criteria[:selects], @criteria[:has_many], @criteria[:conditions], @criteria[:orders],@criteria[:limit] = [], [], {}, [], ''
 
           @fetch_data = false
           @single_element = true
+        end
+
+        def with_many table_name, options={}
+          options.reverse_merge!(:fields => ['Id','Name'])
+          options[:fields] = options[:fields].join(',') if options[:fields].kind_of?(Array) 
+          
+          has_many = "(SELECT #{options[:fields]} FROM #{table_name})"
+          @criteria[:has_many].concat [has_many] unless @criteria[:has_many].include? has_many
+          @fetch_data = true
+          self
         end
 
         def select *fields
@@ -399,11 +409,13 @@ module Restforce
         end
 
         def fetch_select
-          unless @criteria[:selects].empty?
-            fetch_array @criteria[:selects]  
-          else
-            'Id,Name'
-          end
+          result = @criteria[:selects].empty? ? 'Id,Name' : fetch_array(@criteria[:selects])
+          result << ",#{fetch_has_many}" unless fetch_has_many.nil? || fetch_has_many.empty?
+          result
+        end
+
+        def fetch_has_many
+          fetch_array @criteria[:has_many]
         end
 
         def fetch_where

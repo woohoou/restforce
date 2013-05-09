@@ -149,6 +149,14 @@ shared_examples_for 'methods' do
     it "constructs and submits a SOQL query with method limit(string)"
   end
 
+  describe ".with_many" do
+    it "constructs and submits a SOQL query with method with_many(string)"
+
+    it "constructs and submits a SOQL query with method with_many(string,string)"
+
+    it "constructs and submits a SOQL query with method with_many(string,array)"
+  end
+
   describe '.search' do
     requests 'search\?q=FIND%20%7Bbar%7D', :fixture => 'sobject/search_success_response'
 

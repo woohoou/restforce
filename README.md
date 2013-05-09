@@ -286,11 +286,46 @@ Author.select('Id','Name').all.first
 
 # => #<Restforce::SObject Id="xxx" Name="xxx" attributes=#<Restforce::Mash type="Author__c" url="/services/data/v26.0/sobjects/Author__c/xxx">>
 ```
+You can add a relation query something like
+```ruby
+client.query('SELECT Id,Name,(Select Name,Date FROM Songs__r) FROM Album__c').first.Songs__r.Date
+
+# => 2013
+```
+In 2 different ways:
+
+Class
+```ruby
+class Author < Restforce::Rails::ActiveModel
+  restforce Restforce::Client.new(options), 'Author__c'
+  has_many 'Songs__r', :fields => ['Name','Date']
+end
+
+Author.all.first.Songs__r.first
+
+# => #<Restforce::SObject Id="xxx" Name="xxx" attributes=#<Restforce::Mash type="Author__c" url="/services/data/v26.0/sobjects/Author__c/xxx">>
+```
+
+Query
+```ruby
+Author.select('Id','Name').with_many('Songs__r', :fields => ['Id','Name']).first.Songs__r.first
+
+# => #<Restforce::SObject Id="xxx" Name="xxx" attributes=#<Restforce::Mash type="Author__c" url="/services/data/v26.0/sobjects/Author__c/xxx">>
+```
+
 Note: Method missing is used for the model, if you need define it please overwrite as below.
 ```ruby
 def self.method_missing method_name, *args, &block
-  if @@restforce_client.send(@@restforce_table_name).respond_to?(method_name)
-    @@restforce_client.send(@@restforce_table_name).send(method_name, *args, &block)
+  client = @@restforce_client.send(@@restforce_table_name)
+
+  if !@@has_many.nil? && !@@has_many.empty?
+    @@has_many.each do |params|
+      client = client.with_many params[0], params[1]
+    end
+  end
+
+  if client.respond_to?(method_name)
+    client.send(method_name, *args, &block)
   else
     super
   end
