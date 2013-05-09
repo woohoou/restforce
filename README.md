@@ -270,6 +270,7 @@ info.user_id
 ```ruby
 class Author
   include Restforce::Rails::ActiveModel
+  
   restforce Restforce::Client.new(options), 'Author__c'
 end
 
@@ -299,6 +300,7 @@ Class
 ```ruby
 class Author
   include Restforce::Rails::ActiveModel
+
   restforce Restforce::Client.new(options), 'Author__c'
   has_many 'Songs__r', :fields => ['Name','Date']
 end
