@@ -278,7 +278,7 @@ Author.select('Id','Name').where(Name: 'Foo').order('Name ASC').limit('1')
 
 author = Author.select('Name')
 author = author.select('Id','Description')
-author = author.where(Name: 'Foo')
+author = author.where("Name = 'foo' OR Description = 'bar'")
 
 # => #<Restforce::Collection:0x0000000754f7c0>
 
