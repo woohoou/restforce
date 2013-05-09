@@ -265,7 +265,7 @@ info.user_id
 
 * * *
 
-### ActiveRecord Integration
+### ActiveRecord Style
 
 ```ruby
 class Author < Restforce::Rails::ActiveModel
