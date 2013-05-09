@@ -288,7 +288,7 @@ Author.select('Id','Name').all.first
 ```
 You can add a relation query something like
 ```ruby
-client.query('SELECT Id,Name,(Select Name,Date FROM Songs__r) FROM Album__c').first.Songs__r.Date
+client.query('SELECT Id,Name,(Select Name,Date FROM Songs__r) FROM Album__c').first.Songs__r.first.Date
 
 # => 2013
 ```
