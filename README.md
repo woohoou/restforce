@@ -288,6 +288,22 @@ Author.select('Id','Name').all.first
 
 # => #<Restforce::SObject Id="xxx" Name="xxx" attributes=#<Restforce::Mash type="Author__c" url="/services/data/v26.0/sobjects/Author__c/xxx">>
 ```
+You can find directly and with dynamic finders.
+
+```ruby
+client.find('Author', '001D000000INjVe')
+# => #<Restforce::SObject Id="001D000000INjVe" Name="Test" LastModifiedBy="005G0000002f8FHIAY" ... >
+
+Author.find('001D000000INjVe')
+# => #<Restforce::SObject Id="001D000000INjVe" Name="Test" LastModifiedBy="005G0000002f8FHIAY" ... >
+
+client.find('Account', '1234', 'Some_External_Id_Field__c')
+# => #<Restforce::SObject Id="001D000000INjVe" Name="Test" LastModifiedBy="005G0000
+
+Author.find_by_Some_External_Id_Field__c('1234')
+# => #<Restforce::SObject Id="001D000000INjVe" Name="Test" LastModifiedBy="005G0000
+```
+
 You can add a relation query something like
 ```ruby
 client.query('SELECT Id,Name,(Select Name,Date FROM Songs__r) FROM Album__c').first.Songs__r.first.Date

@@ -25,7 +25,7 @@ module Restforce
 								end
 							end
 
-				  		if client.respond_to?(method_name)
+				  		if client.respond_to?(method_name) || method_name.to_s =~ /^find_by_(.+)$/
 								client.send(method_name, *args, &block)
 							else
 								super

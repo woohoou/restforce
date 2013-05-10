@@ -26,3 +26,5 @@ RSpec.configure do |config|
   end
 end
 
+require 'restforce'
+#Restforce.log = true

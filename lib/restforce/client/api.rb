@@ -349,6 +349,10 @@ module Restforce
           self
         end
 
+        def find(id,field=nil)
+          @klass.find(@entity,id,field)
+        end
+
         def where *where_clauses
           where_clauses.each do |where_clause|
             case where_clause.class.name
@@ -445,6 +449,8 @@ module Restforce
         def method_missing(method_name, *args, &block)
           if self.to_a.respond_to? method_name
             self.to_a.send(method_name, *args, &block)
+          elsif method_name.to_s =~ /^find_by_(.+)$/
+            self.find(args[0], $1)
           else
             super
           end
