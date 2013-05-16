@@ -157,6 +157,16 @@ shared_examples_for 'methods' do
     it "constructs and submits a SOQL query with method with_many(string,array)"
   end
 
+  describe ".find" do
+    it "call api_get with id"
+
+    it "call api_get with external id"
+  end
+
+  describe ".find_by" do
+    it "call api_get with external id"
+  end
+
   describe '.search' do
     requests 'search\?q=FIND%20%7Bbar%7D', :fixture => 'sobject/search_success_response'
 
