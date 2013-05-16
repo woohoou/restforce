@@ -315,7 +315,7 @@ module Restforce
           @klass = klass
           @entity = entity
           @criteria = {}
-          @criteria[:selects], @criteria[:has_many], @criteria[:conditions], @criteria[:orders],@criteria[:limit] = [], [], {}, [], ''
+          @criteria[:selects], @criteria[:has_many], @criteria[:conditions], @criteria[:orders], @criteria[:nulls_last], @criteria[:limit] = [], [], {}, [], '', ''
 
           @fetch_data = false
           @single_element = true
@@ -375,6 +375,13 @@ module Restforce
         end
 
         def order *order_clause
+          options = {}
+          if order_clause.last.kind_of? Hash
+            options = order_clause.pop
+            options.reverse_merge!(:nulls_last => false) 
+          end
+
+          @criteria[:nulls_last] = true if options[:nulls_last]
           @criteria[:orders].concat order_clause
           @fetch_data = true
           self 
@@ -426,6 +433,10 @@ module Restforce
           fetch_hash @criteria[:conditions] unless @criteria[:conditions].empty?
         end
 
+        def fetch_nulls_last
+          @criteria[:nulls_last]
+        end
+
         def fetch_order
           fetch_array @criteria[:orders] unless @criteria[:orders].empty?
         end
@@ -435,14 +446,15 @@ module Restforce
         end
 
         def build_query
-          where, order, limit = fetch_where, fetch_order, fetch_limit 
+          where, order, nulls_last, limit = fetch_where, fetch_order, fetch_nulls_last, fetch_limit
 
           result = []
           result << "SELECT #{fetch_select}"
           result << "FROM #{@entity}"
           result << "WHERE #{fetch_where}" unless where.nil? || where.empty?
           result << "ORDER BY #{fetch_order}" unless order.nil? || order.empty?
-          result << "LIMIT #{@criteria[:limit]}" unless limit.nil? || limit.empty?
+          result << "NULLS LAST" if nulls_last == true
+          result << "LIMIT #{@criteria[:limit]}" unless limit.nil? || limit.empty?          
           result.join(' ')
         end
 
