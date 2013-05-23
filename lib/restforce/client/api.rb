@@ -315,7 +315,7 @@ module Restforce
           @klass = klass
           @entity = entity
           @criteria = {}
-          @criteria[:selects], @criteria[:has_many], @criteria[:conditions], @criteria[:orders], @criteria[:nulls_last], @criteria[:limit] = [], [], {}, [], '', ''
+          @criteria[:selects], @criteria[:has_many], @criteria[:conditions], @criteria[:orders], @criteria[:nulls_last], @criteria[:limit], @criteria[:offset] = [], [], {}, [], '', '', ''
 
           @fetch_data = false
           @single_element = true
@@ -393,6 +393,12 @@ module Restforce
           self
         end
 
+        def offset offset
+          @criteria[:offset] = offset.to_s if offset.kind_of?(String) || offset.kind_of?(Integer)
+          @fetch_data = true
+          self
+        end
+
         def inspect
           execute_query
         end
@@ -445,8 +451,12 @@ module Restforce
           @criteria[:limit] unless @criteria[:limit].empty?
         end
 
+        def fetch_offset
+          @criteria[:offset] unless @criteria[:offset].empty?
+        end
+
         def build_query
-          where, order, nulls_last, limit = fetch_where, fetch_order, fetch_nulls_last, fetch_limit
+          where, order, nulls_last, limit, offset = fetch_where, fetch_order, fetch_nulls_last, fetch_limit, fetch_offset
 
           result = []
           result << "SELECT #{fetch_select}"
@@ -455,6 +465,7 @@ module Restforce
           result << "ORDER BY #{fetch_order}" unless order.nil? || order.empty?
           result << "NULLS LAST" if nulls_last == true
           result << "LIMIT #{@criteria[:limit]}" unless limit.nil? || limit.empty?          
+          result << "OFFSET #{@criteria[:offset]}" unless offset.nil? || offset.empty?          
           result.join(' ')
         end
 

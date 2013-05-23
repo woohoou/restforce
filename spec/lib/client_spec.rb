@@ -149,6 +149,12 @@ shared_examples_for 'methods' do
     it "constructs and submits a SOQL query with method limit(string)"
   end
 
+  describe ".offset" do
+    it "constructs and submits a SOQL query with method offset(integer)"
+
+    it "constructs and submits a SOQL query with method offset(string)"
+  end
+
   describe ".with_many" do
     it "constructs and submits a SOQL query with method with_many(string)"
 

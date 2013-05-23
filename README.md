@@ -274,7 +274,7 @@ class Author
   restforce Restforce::Client.new(options), 'Author__c'
 end
 
-Author.select('Id','Name').where(:Name => 'Foo').order('Name ASC', 'nulls_last' => true).limit('1')
+Author.select('Id','Name').where(:Name => 'Foo').order('Name ASC', 'nulls_last' => true).limit('1').offset('2')
 
 # => #<Restforce::Collection:0x0000000754f7c0>
 
