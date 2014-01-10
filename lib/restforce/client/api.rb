@@ -316,7 +316,7 @@ module Restforce
           @entity = entity
           @attributes = attributes
           @criteria = {}
-          @criteria[:selects], @criteria[:has_many], @criteria[:conditions], @criteria[:orders], @criteria[:nulls_last], @criteria[:limit], @criteria[:offset] = [], [], {}, [], '', '', ''
+          @criteria[:selects], @criteria[:has_many], @criteria[:belongs_to], @criteria[:conditions], @criteria[:orders], @criteria[:nulls_last], @criteria[:limit], @criteria[:offset] = [], [], [], {}, [], '', '', ''
 
           @fetch_data = false
           @single_element = true
@@ -328,6 +328,16 @@ module Restforce
           
           has_many = "(SELECT #{options[:fields]} FROM #{table_name})"
           @criteria[:has_many].concat [has_many] unless @criteria[:has_many].include? has_many
+          @fetch_data = true
+          self
+        end
+
+        def with_one table_name, options={}
+          options.reverse_merge!(:fields => ['Id','Name'])
+          options[:fields] = options[:fields].split(',') if options[:fields].kind_of?(String)
+          
+          belongs_to = options[:fields].map{|field| "#{table_name}.#{field}"}
+          @criteria[:belongs_to].concat belongs_to unless @criteria[:belongs_to].include? belongs_to
           @fetch_data = true
           self
         end
@@ -432,12 +442,17 @@ module Restforce
 
         def fetch_select
           result = @criteria[:selects].empty? ? 'Id,Name' : fetch_array(@criteria[:selects])
+          result << ",#{fetch_belongs_to}" unless fetch_belongs_to.nil? || fetch_belongs_to.empty?
           result << ",#{fetch_has_many}" unless fetch_has_many.nil? || fetch_has_many.empty?
           result
         end
 
         def fetch_has_many
           fetch_array @criteria[:has_many]
+        end
+
+        def fetch_belongs_to
+          fetch_array @criteria[:belongs_to]
         end
 
         def fetch_where

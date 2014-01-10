@@ -6,14 +6,14 @@ module Restforce
 				base.class_eval do
 					
 					@has_many ||= []
-
-					def self.attributes attributes=['Id','Name']
-						@@attributes = attributes if attributes.present?
-						@@attributes
-					end
+					@belongs_to ||= []
 
 					def self.has_many table_name, options={}
 						@has_many << [table_name, options]
+					end
+
+					def self.belongs_to table_name, options={}
+						@belongs_to << [table_name, options]
 					end
 
 					def self.restforce options={}
@@ -24,7 +24,7 @@ module Restforce
 						})
 						@restforce_client ||= options[:client]
 						@restforce_table_name ||= options[:table_name]
-						@restforce_attributes ||= options[:attributes]
+						@restforce_attributes ||= options[:attributes].kind_of?(String) ? options[:attributes].split(',') : options[:attributes]
 
 						def self.method_missing method_name, *args, &block
 							
@@ -33,6 +33,12 @@ module Restforce
 							if !@has_many.nil? && !@has_many.empty?
 								@has_many.each do |params|
 									client = client.with_many params[0], params[1]
+								end
+							end
+
+							if !@belongs_to.nil? && !@belongs_to.empty?
+								@belongs_to.each do |params|
+									client = client.with_one params[0], params[1]
 								end
 							end
 
