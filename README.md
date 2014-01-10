@@ -325,6 +325,7 @@ class Author
   })
 
   has_many 'Songs__r', :fields => ['Name','Date']
+  belongs_to 'Brand__r', :fields => ['Name','Location']
 end
 
 Author.all.first.Songs__r.first
