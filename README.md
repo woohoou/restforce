@@ -316,8 +316,14 @@ Class
 ```ruby
 class Author
   include Restforce::Rails::ActiveModel
+  options = {}
 
-  restforce Restforce::Client.new(options), 'Author__c'
+  restforce({
+    client: Restforce::Client.new(options),
+    table_name: 'Author__c',
+    attributes: ['Id','Name','Value__c','Lookup_Name__c']
+  })
+
   has_many 'Songs__r', :fields => ['Name','Date']
 end
 
@@ -331,6 +337,9 @@ Query
 Author.select('Id','Name').with_many('Songs__r', :fields => ['Id','Name']).first.Songs__r.first
 
 # => #<Restforce::SObject Id="xxx" Name="xxx" attributes=#<Restforce::Mash type="Author__c" url="/services/data/v26.0/sobjects/Author__c/xxx">>
+
+Author.select(:all).first
+# => #<Restforce::SObject Id="xxx" Name="xxx" Value__c="xxx" Lookup_Name__c="xxx" attributes=#<Restforce::Mash type="Author__c" url="/services/data/v26.0/sobjects/Author__c/xxx">>
 ```
 
 Note: Method missing is used for the model, if you need define it please overwrite as below.

@@ -124,6 +124,12 @@ shared_examples_for 'methods' do
     it "constructs and submits a SOQL query with method select(args)" do
       client.object.select('some','fields').all.to_a.should be_an Enumerable
     end
+
+    it "constructs and submits a SOQL query with method select(:all) with all attributes" do
+      object = client.object
+      object.instance_eval { @attributes = ['some','fields'] }
+      object.select(:all).all.to_a.should be_an Enumerable
+    end
   end
 
   describe ".where" do

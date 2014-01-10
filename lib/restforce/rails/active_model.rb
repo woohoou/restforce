@@ -7,17 +7,28 @@ module Restforce
 					
 					@has_many ||= []
 
+					def self.attributes attributes=['Id','Name']
+						@@attributes = attributes if attributes.present?
+						@@attributes
+					end
+
 					def self.has_many table_name, options={}
 						@has_many << [table_name, options]
 					end
 
-					def self.restforce client, table_name
-						@restforce_client ||= client
-						@restforce_table_name ||= table_name
+					def self.restforce options={}
+						options.reverse_merge!({
+							client: Restforce::Client.new,
+							table_name: self.name.tableize.split('/').last.titleize.gsub(' ','_')+'__c',
+							attributes: ['Id','Name']
+						})
+						@restforce_client ||= options[:client]
+						@restforce_table_name ||= options[:table_name]
+						@restforce_attributes ||= options[:attributes]
 
 						def self.method_missing method_name, *args, &block
 							
-							client = @restforce_client.send(@restforce_table_name)
+							client = @restforce_client.send(@restforce_table_name, @restforce_attributes)
 
 							if !@has_many.nil? && !@has_many.empty?
 								@has_many.each do |params|

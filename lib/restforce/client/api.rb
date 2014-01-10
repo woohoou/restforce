@@ -280,7 +280,7 @@ module Restforce
 
       def method_missing(method_name, *args, &block)
         if self.class == Restforce::Client
-          proxy(method_name)
+          proxy(method_name, *args)
         elsif self.class == Restforce::Client::Query
           proxy.send(method_name, *args, &block)
         else
@@ -288,8 +288,8 @@ module Restforce
         end
       end
 
-      def proxy(entity=nil)
-        self.kind_of?(Restforce::Client::Query) ? self : Query.new(self,entity)
+      def proxy(entity=nil, attributes=nil)
+        self.kind_of?(Restforce::Client::Query) ? self : Query.new(self,entity, attributes)
       end
 
       # Internal: Returns a path to an api endpoint
@@ -311,9 +311,10 @@ module Restforce
       class Query
         include Enumerable
 
-        def initialize klass, entity
+        def initialize klass, entity, attributes
           @klass = klass
           @entity = entity
+          @attributes = attributes
           @criteria = {}
           @criteria[:selects], @criteria[:has_many], @criteria[:conditions], @criteria[:orders], @criteria[:nulls_last], @criteria[:limit], @criteria[:offset] = [], [], {}, [], '', '', ''
 
@@ -338,7 +339,11 @@ module Restforce
             options.reverse_merge!(:fetch_data => false) 
           end
 
-          @criteria[:selects].concat fields
+          if fields == [:all]
+            @criteria[:selects].concat @attributes
+          else
+            @criteria[:selects].concat fields
+          end
 
           @fetch_data = true if options[:fetch_data]
           self
@@ -418,7 +423,7 @@ module Restforce
         private
 
         def fetch_array array
-          array.join(',')
+          array.uniq.join(',')
         end
 
         def fetch_hash hash
