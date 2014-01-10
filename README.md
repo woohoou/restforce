@@ -271,7 +271,11 @@ info.user_id
 class Author
   include Restforce::Rails::ActiveModel
   
-  restforce Restforce::Client.new(options), 'Author__c'
+  restforce({
+    client: Restforce::Client.new(options),
+    table_name: 'Author__c',
+    attributes: ['Id','Name','Last_Name','Description']
+  })
 end
 
 Author.select('Id','Name').where(:Name => 'Foo').order('Name ASC', 'nulls_last' => true).limit('1').offset('2')
@@ -283,12 +287,19 @@ author = author.select('Id','Description')
 author = author.where("Name = 'foo' OR Description = 'bar'")
 
 # => #<Restforce::Collection:0x0000000754f7c0>
-
-Author.select('Id','Name').all.first
+```
+Attributes "Id" and "Name" are selected by default.
+```ruby
+Author.select.all.first
 
 # => #<Restforce::SObject Id="xxx" Name="xxx" attributes=#<Restforce::Mash type="Author__c" url="/services/data/v26.0/sobjects/Author__c/xxx">>
 ```
-You can find directly and with dynamic finders.
+Also you can find all attributes defined in restforce method with :all parameter
+```ruby
+Author.select(:all).first
+# => #<Restforce::SObject Id="xxx" Name="xxx" Last_Name="xxx" Description="xxx" attributes=#<Restforce::Mash type="Author__c" url="/services/data/v26.0/sobjects/Author__c/xxx">>
+```
+Or you can find directly and with dynamic finders.
 
 ```ruby
 client.find('Author', '001D000000INjVe')
@@ -306,7 +317,7 @@ Author.find_by_Some_External_Id_Field__c('1234')
 
 You can add a relation query something like
 ```ruby
-client.query('SELECT Id,Name,(Select Name,Date FROM Songs__r) FROM Album__c').first.Songs__r.first.Date
+client.query('SELECT Id,Name,(Select Name,Date FROM Songs__r), Brand__r.Name FROM Album__c').first.Songs__r.first.Date
 
 # => 2013
 ```
@@ -329,32 +340,39 @@ class Author
 end
 
 Author.all.first.Songs__r.first
+# => #<Restforce::SObject Id="xxx" Name="xxx" attributes=#<Restforce::Mash type="Songs__r" url="/services/data/v26.0/sobjects/Author__c/xxx">>
 
-# => #<Restforce::SObject Id="xxx" Name="xxx" attributes=#<Restforce::Mash type="Author__c" url="/services/data/v26.0/sobjects/Author__c/xxx">>
+Author.all.first.Brand__r
+# => #<Restforce::SObject Id="xxx" Name="xxx" attributes=#<Restforce::Mash type="Brand__r" url="/services/data/v26.0/sobjects/Author__c/xxx">>
 ```
 
 Query
 ```ruby
 Author.select('Id','Name').with_many('Songs__r', :fields => ['Id','Name']).first.Songs__r.first
-
 # => #<Restforce::SObject Id="xxx" Name="xxx" attributes=#<Restforce::Mash type="Author__c" url="/services/data/v26.0/sobjects/Author__c/xxx">>
 
-Author.select(:all).first
-# => #<Restforce::SObject Id="xxx" Name="xxx" Value__c="xxx" Lookup_Name__c="xxx" attributes=#<Restforce::Mash type="Author__c" url="/services/data/v26.0/sobjects/Author__c/xxx">>
+Author.select('Id','Name').with_one('Brand__r', :fields => ['Id','Name']).first..Brand__r
+# => #<Restforce::SObject Id="xxx" Name="xxx" attributes=#<Restforce::Mash type="Brand__r" url="/services/data/v26.0/sobjects/Author__c/xxx">>
 ```
 
 Note: Method missing is used for the model, if you need define it please overwrite as below.
 ```ruby
 def self.method_missing method_name, *args, &block
-  client = @@restforce_client.send(@@restforce_table_name)
+  client = @restforce_client.send(@restforce_table_name, @restforce_attributes)
 
-  if !@@has_many.nil? && !@@has_many.empty?
-    @@has_many.each do |params|
+  if !@has_many.nil? && !@has_many.empty?
+    @has_many.each do |params|
       client = client.with_many params[0], params[1]
     end
   end
 
-  if client.respond_to?(method_name)
+  if !@belongs_to.nil? && !@belongs_to.empty?
+    @belongs_to.each do |params|
+      client = client.with_one params[0], params[1]
+    end
+  end
+
+  if client.respond_to?(method_name) || method_name.to_s =~ /^find_by_(.+)$/
     client.send(method_name, *args, &block)
   else
     super
