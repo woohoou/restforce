@@ -16,6 +16,18 @@ module Restforce
 						@belongs_to << [table_name, options]
 					end
 
+					def self.create(*args)
+						@restforce_client.create(@restforce_table_name, *args)
+					end
+
+					def self.create_and_return(*args)
+						self.find(@restforce_client.create(@restforce_table_name, *args))
+					end
+
+					def self.destroy(id)
+						@restforce_client.destroy(@restforce_table_name, id)
+					end
+
 					def self.restforce options={}
 						options.reverse_merge!({
 							client: Restforce::Client.new,
@@ -27,7 +39,6 @@ module Restforce
 						@restforce_attributes ||= options[:attributes].kind_of?(String) ? options[:attributes].split(',') : options[:attributes]
 
 						def self.method_missing method_name, *args, &block
-							
 							client = @restforce_client.send(@restforce_table_name, @restforce_attributes)
 
 							if !@has_many.nil? && !@has_many.empty?
