@@ -20,12 +20,24 @@ module Restforce
 						@restforce_client.create(@restforce_table_name, *args)
 					end
 
+					def self.create!(*args)
+						@restforce_client.create!(@restforce_table_name, *args)
+					end
+
 					def self.create_and_return(*args)
 						self.find(@restforce_client.create(@restforce_table_name, *args))
 					end
 
+					def self.create_and_return!(*args)
+						self.find(@restforce_client.create!(@restforce_table_name, *args))
+					end
+
 					def self.destroy(id)
 						@restforce_client.destroy(@restforce_table_name, id)
+					end
+
+					def self.destroy!(id)
+						@restforce_client.destroy!(@restforce_table_name, id)
 					end
 
 					def self.restforce options={}
