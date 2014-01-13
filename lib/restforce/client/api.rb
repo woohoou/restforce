@@ -389,6 +389,10 @@ module Restforce
           self
         end
 
+        def first_or_create
+          execute_query('first_or_create')
+        end
+
         def order *order_clause
           options = {}
           if order_clause.last.kind_of? Hash
@@ -440,6 +444,10 @@ module Restforce
           hash.map{|k,v| k == :string ? v : "#{k} = '#{v}'"}.join(' AND ')
         end
 
+        def fetch_to_hash hash
+          hash.select{|k,v| k != :string }
+        end
+
         def fetch_select
           result = @criteria[:selects].empty? ? 'Id,Name' : fetch_array(@criteria[:selects])
           result << ",#{fetch_belongs_to}" unless fetch_belongs_to.nil? || fetch_belongs_to.empty?
@@ -489,6 +497,11 @@ module Restforce
           result.join(' ')
         end
 
+        def _first_or_create
+          criteria = fetch_to_hash(@criteria[:conditions])
+          self.size > 0 ? self.first : @klass.find(@entity, @klass.create!(@entity, criteria)) if criteria.present?
+        end
+
         def method_missing(method_name, *args, &block)
           if self.to_a.respond_to? method_name
             self.to_a.send(method_name, *args, &block)
@@ -509,6 +522,8 @@ module Restforce
                 yield record
               end
             end
+          when 'first_or_create'
+            _first_or_create
           else
             @fetch_data ? @klass.query(build_query) : self
           end

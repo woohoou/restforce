@@ -354,12 +354,17 @@ Author.select('Id','Name').with_many('Songs__r', :fields => ['Id','Name']).first
 Author.select('Id','Name').with_one('Brand__r', :fields => ['Id','Name']).first..Brand__r
 # => #<Restforce::SObject Id="xxx" Name="xxx" attributes=#<Restforce::Mash type="Brand__r" url="/services/data/v26.0/sobjects/Author__c/xxx">>
 ```
-Also you can create and delete objects
+Also you can create and delete objects, create!, create_and_return! and delete! also are available raising exceptions.
 ```ruby
 id = Author.create(Name: 'David')
 Author.delete(id)
 
-object = Author.create_and_return(Name: 'Michael') # Create and find
+object = Author.create_and_return!(Name: 'Michael') # Create and find
+
+```
+Or use first_or_create after a where
+```ruby
+author = author.where("Name = 'foo' OR Description = 'bar'").first_or_create
 ```
 
 Note: Method missing is used for the model, if you need define it please overwrite as below.

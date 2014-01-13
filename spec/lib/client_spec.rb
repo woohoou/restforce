@@ -179,6 +179,14 @@ shared_examples_for 'methods' do
     it "call api_get with external id"
   end
 
+  describe "create"
+  describe "destroy"
+  describe "create_and_return"
+  describe "first_or_create"
+  describe "has_many"
+  describe "belongs_to"
+  describe "restforce"
+
   describe '.search' do
     requests 'search\?q=FIND%20%7Bbar%7D', :fixture => 'sobject/search_success_response'
 
