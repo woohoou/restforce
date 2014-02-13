@@ -441,7 +441,17 @@ module Restforce
         end
 
         def fetch_hash hash
-          hash.map{|k,v| k == :string ? v : "#{k} = '#{v}'"}.join(' AND ')
+          hash.map do|k,v|
+            if k == :string
+              v
+            else
+              if [true, false].include? v
+                "#{k} = #{v}"
+              else
+                "#{k} = '#{v}'"
+              end
+            end
+          end.join(' AND ')
         end
 
         def fetch_to_hash hash
