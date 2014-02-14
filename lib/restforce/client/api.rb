@@ -445,7 +445,8 @@ module Restforce
             if k == :string
               v
             else
-              if [true, false].include? v
+              if [true, false, nil].include? v
+                v = 'null' if v.nil?
                 "#{k} = #{v}"
               else
                 "#{k} = '#{v}'"
