@@ -1,9 +1,21 @@
 module Restforce
 	module Rails
+    CALLBACKS = ActiveModel::Callbacks
+    #TODO Send self.object to callback
+
 		module ActiveModel
 
 			def self.included(base)				
+
 				base.class_eval do
+          extend CALLBACKS
+
+          define_model_callbacks :create, :update, :destroy
+
+          def id ; @id ; end
+          def id=(id) ; @id=id ; end
+          def object ; @object ; end
+          def object=(object) ; @object = object ; end
 					
 					@has_many ||= []
 					@belongs_to ||= []
@@ -17,28 +29,92 @@ module Restforce
 					end
 
 					def self.create(*args)
-						@restforce_client.create(@restforce_table_name, *args)
+            instance = new
+            instance.run_callbacks :create do
+					    instance.object = @restforce_client.create(@restforce_table_name, *args)
+              instance.id = instance.object if instance.object.present?
+            end
 					end
 
 					def self.create!(*args)
-						@restforce_client.create!(@restforce_table_name, *args)
+            instance = new
+            instance.run_callbacks :create do
+						  instance.object = @restforce_client.create!(@restforce_table_name, *args)
+              instance.id = instance.object if instance.object.present?
+            end
 					end
 
 					def self.create_and_return(*args)
-						self.find(@restforce_client.create(@restforce_table_name, *args))
+            instance = new
+            instance.run_callbacks :create do
+						  instance.object = self.find(@restforce_client.create(@restforce_table_name, *args))
+              instance.id = instance.object if instance.object.try(:Id).present?
+            end
 					end
 
 					def self.create_and_return!(*args)
-						self.find(@restforce_client.create!(@restforce_table_name, *args))
+            instance = new
+            instance.run_callbacks :create do
+						  instance.object = self.find(@restforce_client.create!(@restforce_table_name, *args))
+              instance.id = instance.object if instance.object.try(:Id).present?
+            end
 					end
 
+          def self.update(*args)
+            instance = new
+            instance.run_callbacks :update do
+              instance.id = args[0].with_indifferent_access[:Id] if args[0].is_a?(Hash) && args[0].with_indifferent_access[:Id].present?
+              instance.object = @restforce_client.update(@restforce_table_name, *args)
+            end
+          end
+
+          def self.update!(*args)
+            instance = new
+            instance.run_callbacks :update do
+              instance.id = args[0].with_indifferent_access[:Id] if args[0].is_a?(Hash) && args[0].with_indifferent_access[:Id].present?
+              instance.object = @restforce_client.update!(@restforce_table_name, *args)
+            end
+          end
+
+          def self.upsert(*args)
+            instance = new
+            instance.run_callbacks :update do
+              instance.id = args[0].with_indifferent_access[:Id] if args[0].is_a?(Hash) && args[0].with_indifferent_access[:Id].present?
+              instance.object = @restforce_client.upsert(@restforce_table_name, *args)
+            end
+          end
+
+          def self.upsert!(*args)
+            instance = new
+            instance.run_callbacks :update do
+              instance.id = args[0].with_indifferent_access[:Id] if args[0].is_a?(Hash) && args[0].with_indifferent_access[:Id].present?
+              instance.object = @restforce_client.upsert!(@restforce_table_name, *args)
+            end
+          end
+
 					def self.destroy(id)
-						@restforce_client.destroy(@restforce_table_name, id)
+            instance = new
+            instance.run_callbacks :destroy do
+              instance.id = args[0].with_indifferent_access[:Id] if args[0].is_a?(Hash) && args[0].with_indifferent_access[:Id].present?
+						  instance.object = @restforce_client.destroy(@restforce_table_name, id)
+            end
 					end
 
 					def self.destroy!(id)
-						@restforce_client.destroy!(@restforce_table_name, id)
+            instance = new
+            instance.run_callbacks :destroy do
+              instance.id = args[0].with_indifferent_access[:Id] if args[0].is_a?(Hash) && args[0].with_indifferent_access[:Id].present?
+						  instance.object = @restforce_client.destroy!(@restforce_table_name, id)
+            end
 					end
+
+          def method_missing method_name, *args, &block
+            if object.respond_to?(method_name)
+              object.send(method_name, *args, &block)
+            else
+              super(method_name, *args, &block)
+            end
+          end
 
 					def self.restforce options={}
 						options.reverse_merge!({
